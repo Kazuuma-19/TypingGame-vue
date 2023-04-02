@@ -21,17 +21,17 @@
 
       <div v-if="startFlg"><!-- trueの場合表示 -->
         <div class="question mb-20">{{ current_question }}</div>
-        <div class="clear">Clear!</div>
+        <div v-if="current_question_counts == question_counts " class="clear">Clear!</div>
 
         <div class="typeFormWrapper mb-20">
-          <input type="text" class="typeForm" v-model="typeBox">
+          <input v-model="typeBox" type="text" id="typeForm" class="typeForm">
         </div>
 
         <div class="gaugeWrapper mb-20">
-          <div class="gauge"></div>
+          <div v-bind:style="styleObject" class="gauge"></div>
         </div>
 
-        <div>1/5</div>
+        <div>{{ current_question_counts }}/{{ question_counts }}</div>
       </div>
     </div>
 
@@ -49,22 +49,48 @@
             'espresso'
           ],
           typeBox: "",
+          current_question_counts: 0,
+          question_counts: 0,
         },
-        methods: {
-          gameStart: function () {
-            this.startFlg = true;
+        computed: {
+          styleObject: function () {
+            width = 20 * this.current_question_counts + "%";
+            if (this.current_question_counts == 5) {
+              color = "#03a9f4";
+            } else {
+              color = "orange";
+            }
+
+            return {
+              'width': width,
+              'background-color': color,
+            }
           }
         },
-        mounted: function () {
-          this.current_question = this.questions[0];
+        methods: {
+          // スタートボタンが押されたとき
+          gameStart: function () {
+            this.startFlg = true;
+            // カーソルをあてる
+            this.$nextTick(function () {
+              document.getElementById('typeForm').focus();
+            })
+          }
         },
-        watch: {
+        mounted: function () { //描画された時点で処理、初期状態
+          this.current_question = this.questions[0];
+          this.question_counts = this.questions.length;
+        },
+        watch: { //データが変化する度に処理
           typeBox: function (e) {
             //入力した値と回答が一致しているか判定する
             if (e == this.current_question) {
+              // 問題を次にすすめる
               this.questions.splice(0, 1);
               this.current_question = this.questions[0];
               this.typeBox = "";
+              //正解したらカウントをすすめる
+              this.current_question_counts = this.current_question_counts + 1;
             }
           }
         }
